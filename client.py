@@ -1,4 +1,5 @@
 import socket
+import time
 from binascii import hexlify, unhexlify
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import DES, AES
@@ -7,7 +8,7 @@ from Crypto.Hash import SHA256
 from Crypto.Signature import PKCS1_v1_5 
 # Establish connection to the server
 s = socket.socket()
-s.connect(("localhost",8788))
+s.connect(("localhost",8794))
 print("connection ok")
 s.sendall("connexion ok")
 
@@ -75,13 +76,15 @@ while True:
 		message = raw_input()
 		# generate initialization vector in hexadecimal format and send it to the server
 		iv = hexlify(generateInitVector())
-		print "Init Vector="+iv
+		print "Init Vector="+iv+"\n"
 		s.sendall("Init Vector="+iv)
+		time.sleep(2)
 		# encrypt the message using AES and send it to the server
 		encryptedAES = encryptAES(aesKey,iv,message)
 		print "Encrypted Message="+encryptedAES
 		s.sendall("encryptedMessage="+str(encryptedAES))
 		#Server's response if Server OK the server decrypt the message
+		time.sleep(2)
 		server_response = s.recv(1024)
 		server_response = server_response.replace("\r\n", '')
 		if server_response == "Server: OK":
