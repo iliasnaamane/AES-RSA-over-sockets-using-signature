@@ -3,6 +3,9 @@ from Crypto.PublicKey import RSA
 from Crypto import Random
 from Crypto.Cipher import AES
 from binascii import hexlify, unhexlify
+from Crypto.Hash import SHA256
+from Crypto.Signature import PKCS1_v1_5 
+
 ## Generate RSA private & public keys
 random_generator = Random.new().read
 private_key = RSA.generate(1024, random_generator)
@@ -10,7 +13,7 @@ public_key = private_key.publickey()
 
 ## Server Binding
 HOST = "localhost" #localhost
-PORT = 8787
+PORT = 8788
 s = socket(AF_INET, SOCK_STREAM)
 s.bind((HOST, PORT))
 s.listen(6)
@@ -25,7 +28,6 @@ def pkcs5_unpad(s):
 # decrypt data using RSA private key
 def decryptRSA(data,private_key):
 	print "decryptRSA....\n"
-	
 	data = data.replace("encryptedRSA=",'')
 	print "RSA key encrypted:"+str(data)
 	encrypted = eval(data)
@@ -42,8 +44,17 @@ def encryptRSA(data,string):
 #decrypt message using AES
 def decryptAES(aesKey, iv, ciphertext):
 	cipher = AES.new(unhexlify(aesKey), AES.MODE_CBC, unhexlify(iv))
-	print "ciphertext="+unhexlify("ef531f5d790bcf1d72e1ab109076f177")
 	return pkcs5_unpad(cipher.decrypt(unhexlify(ciphertext)))
+# Hash using SHA256
+def hashMessage(string):
+	digest = SHA256.new()
+	digest.update(string)
+	return digest
+
+def sign(message, priv_key):
+	signer = PKCS1_v1_5.new(priv_key)
+	digest = hashMessage(message)
+	return signer.sign(digest)
 
 while True:
 	# First message from the client which normally indicates that connection is ok
@@ -51,6 +62,8 @@ while True:
 	data = data.replace("\r\n", '')
 	if data == "connexion ok":
 		conn.send("public key:"+public_key.exportKey()+"\n")
+		conn.send("Hello I am the server")
+		conn.send("Signature"+sign("Hello I am the server",private_key))
 	# Decrypt aesKey using RSA private key
 	elif "encryptedRSA" in data:
 		aesKey= decryptRSA(data,private_key)
