@@ -9,7 +9,7 @@ import time
 
 ## Generate RSA private & public keys
 random_generator = Random.new().read
-private_key = RSA.generate(1024, random_generator)
+private_key = RSA.generate(2048, random_generator)
 public_key = private_key.publickey()
 
 ## Server Binding
